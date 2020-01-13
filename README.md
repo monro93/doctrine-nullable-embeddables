@@ -8,7 +8,7 @@ The issue is the following:
   When an instance of "A" is loaded from DB and "B" is null   
   Then an instance of "B" is created with all the values to null and assigned to the property "B" of "A"
   
-The behaviour of this library will be the following:   
+The behaviour of this library will be the following:    
 
 >Given a class "A" that has an ORM relation with an embedded "B" that could be null  
   When an instance of "A" is loaded from DB and "B" is null   
