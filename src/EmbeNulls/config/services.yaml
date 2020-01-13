@@ -21,4 +21,4 @@ services:
     EmbeNulls\Subscriber\NullableEmbeddableSubscriber:
         class: EmbeNulls\Subscriber\NullableEmbeddableSubscriber
         tags:
-            - { name: doctrine.event_subscriber
+            - { name: doctrine.event_subscriber }
