@@ -1,0 +1,9 @@
+version: '3.7'
+
+services:
+  php:
+      image: monro/php72-cli:latest
+      restart: on-failure
+      user: 1001:1001
+      volumes:
+          - ./:/usr/src/app

@@ -1,0 +1,24 @@
+parameters:
+    env(DOCTRINE_CONFIG_FILE): '%kernel.project_dir%/config/packages/doctrine.yaml'
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    Symfony\Component\Finder\Finder:
+        class: Symfony\Component\Finder\Finder
+
+    EmbeNulls\Service\YamlParser:
+        class: EmbeNulls\Service\YamlParser
+
+    EmbeNulls\Service\NullableEmbeddableService:
+        class: EmbeNulls\Service\NullableEmbeddableService
+        arguments:
+            $doctrineConfigFile: '%env(DOCTRINE_CONFIG_FILE)%'
+            $kernelProjectDir: '%kernel.project_dir%'
+
+    EmbeNulls\Subscriber\NullableEmbeddableSubscriber:
+        class: EmbeNulls\Subscriber\NullableEmbeddableSubscriber
+        tags:
+            - { name: doctrine.event_subscriber
