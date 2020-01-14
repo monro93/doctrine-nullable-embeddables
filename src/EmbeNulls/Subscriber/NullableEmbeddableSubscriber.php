@@ -62,10 +62,11 @@ class NullableEmbeddableSubscriber implements EventSubscriber
             $reflectionProperty->setAccessible(true);
             $value = $reflectionProperty->getValue($entity);
             $reflectionProperty->setAccessible(false);
-            if (is_object($value) && !$this->isNullObject($value)) {
-                return false;
-            }
-            if (!is_null($value)) {
+            if (is_object($value)) {
+                if (!$this->isNullObject($value)) {
+                    return false;
+                }
+            } elseif (!is_null($value)) {
                 return false;
             }
         }
