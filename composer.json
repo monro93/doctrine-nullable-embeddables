@@ -23,5 +23,8 @@
             "Unit\\": "tests/Unit/",
             "Integration\\": "tests/Integration/"
         }
+    },
+    "scripts": {
+        "test": "phpunit"
     }
 }
