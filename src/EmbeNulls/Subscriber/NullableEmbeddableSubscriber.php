@@ -58,19 +58,21 @@ class NullableEmbeddableSubscriber implements EventSubscriber
     private function isNullObject($entity): bool
     {
         $reflectionClass = new ReflectionClass(get_class($entity));
+        $isNull = true;
         foreach ($reflectionClass->getProperties() as $reflectionProperty) {
             $reflectionProperty->setAccessible(true);
             $value = $reflectionProperty->getValue($entity);
-            $reflectionProperty->setAccessible(false);
             if (is_object($value)) {
-                if (!$this->isNullObject($value)) {
-                    return false;
+                if ($this->isNullObject($value)) {
+                    $reflectionProperty->setValue($entity, null);
+                }else{
+                    $isNull = false;
                 }
             } elseif (!is_null($value)) {
-                return false;
+                $isNull = false;
             }
+            $reflectionProperty->setAccessible(false);
         }
-
-        return true;
+        return $isNull;
     }
 }
