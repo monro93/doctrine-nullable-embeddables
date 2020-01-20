@@ -1,4 +1,5 @@
-# What
+[![Build Status](https://travis-ci.com/monro93/doctrine-nullable-embeddables.svg?branch=master)](https://travis-ci.com/monro93/doctrine-nullable-embeddables) [![Coverage Status](https://coveralls.io/repos/github/monro93/doctrine-nullable-embeddables/badge.svg)](https://coveralls.io/github/monro93/doctrine-nullable-embeddables)
+# Why
 
 The purpose of this library is to fix a [known bug on doctrine](https://github.com/doctrine/orm/issues/4568) where you cannot have nullable embeddables.
 

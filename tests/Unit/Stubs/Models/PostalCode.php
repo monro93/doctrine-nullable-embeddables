@@ -13,4 +13,9 @@ class PostalCode
     {
         $this->value = $value;
     }
+
+    public function getValue(): string
+    {
+        return $this->value;
+    }
 }

@@ -8,6 +8,7 @@ use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
 use EmbeNulls\Service\NullableEmbeddableService;
 use EmbeNulls\Subscriber\NullableEmbeddableSubscriber;
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\Prophecy\ObjectProphecy;
 use ReflectionClass;
 use Unit\Stubs\Models\Address;
@@ -16,14 +17,16 @@ use Unit\Stubs\Models\Email;
 use Unit\Stubs\Models\Owner;
 use Unit\Stubs\Models\PetIdentification;
 use Unit\Stubs\Models\Phone;
+use Unit\Stubs\Models\PostalCode;
 
 class NullableEmbeddableSubscriberTest extends TestCase
 {
-    const DEFAULT_DOG_NAME = 'Rufus';
-    const DEFAULT_PET_IDENTIFICATION_NUMBER = '123-T';
-    const DEFAULT_OWNER_FIRST_NAME = 'Peter';
-    const DEFAULT_OWNER_LAST_NAME = 'Parker';
-    const DEFAULT_OWNER_EMAIL = 'peter.parker@example.com';
+    private const DEFAULT_DOG_NAME = 'Rufus';
+    private const DEFAULT_PET_IDENTIFICATION_NUMBER = '123-T';
+    private const DEFAULT_OWNER_FIRST_NAME = 'Peter';
+    private const DEFAULT_OWNER_LAST_NAME = 'Parker';
+    private const DEFAULT_OWNER_EMAIL = 'peter.parker@example.com';
+    private const DEFAULT_POSTAL_CODE = '123123123';
     /** @var NullableEmbeddableService|ObjectProphecy */
     private $nullableEmbeddableService;
     /** @var NullableEmbeddableSubscriber */
@@ -34,6 +37,24 @@ class NullableEmbeddableSubscriberTest extends TestCase
         $this->nullableEmbeddableService = $this->prophesize(NullableEmbeddableService::class);
         $this->setNullableEmdbeddablesStub();
         $this->sut = new NullableEmbeddableSubscriber($this->nullableEmbeddableService->reveal());
+    }
+
+    public function test_is_subscribed_to_post_load_event()
+    {
+        $subscribedEvents = $this->sut->getSubscribedEvents();
+        $this->assertContains('postLoad', $subscribedEvents);
+    }
+
+    public function test_a_postal_code_without_nullables_will_not_change_anything()
+    {
+        $postalCode = new PostalCode(
+            self::DEFAULT_POSTAL_CODE
+        );
+
+        $lifecycleEventArgs = $this->buildEventArgument($postalCode);
+
+        $this->sut->postLoad($lifecycleEventArgs->reveal());
+        $this->assertEquals(self::DEFAULT_POSTAL_CODE, $postalCode->getValue());
     }
 
     public function test_a_dog_without_pet_identification_will_not_change_anything()
@@ -109,6 +130,7 @@ class NullableEmbeddableSubscriberTest extends TestCase
         $this->nullableEmbeddableService->getNullableEmbeddeds(PetIdentification::class)->willReturn(['address']);
         $this->nullableEmbeddableService->getNullableEmbeddeds(Owner::class)->willReturn(['phone', 'address']);
         $this->nullableEmbeddableService->getNullableEmbeddeds(Address::class)->willReturn(['postalCode']);
+        $this->nullableEmbeddableService->getNullableEmbeddeds(Argument::any())->willReturn([]);
     }
 
     private function createNullObjectAsDoctrineDoes(string $className)
@@ -118,10 +140,10 @@ class NullableEmbeddableSubscriberTest extends TestCase
         return $r->newInstanceWithoutConstructor();
     }
 
-    protected function buildEventArgument(Dog $dog)
+    protected function buildEventArgument($entity)
     {
         $lifecycleEventArgs = $this->prophesize(LifecycleEventArgs::class);
-        $lifecycleEventArgs->getObject()->willReturn($dog)->shouldBeCalledOnce();
+        $lifecycleEventArgs->getObject()->willReturn($entity)->shouldBeCalledOnce();
 
         return $lifecycleEventArgs;
     }
