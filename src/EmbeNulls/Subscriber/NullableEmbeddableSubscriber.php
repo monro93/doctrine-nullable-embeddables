@@ -7,6 +7,7 @@ namespace EmbeNulls\Subscriber;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\Events;
+use Doctrine\Persistence\ObjectManager;
 use EmbeNulls\Service\NullableEmbeddableService;
 use ReflectionClass;
 
@@ -15,6 +16,8 @@ class NullableEmbeddableSubscriber implements EventSubscriber
 
     /** @var NullableEmbeddableService */
     private $nullableEmbeddableService;
+    /** @var ObjectManager */
+    private $objectManager;
 
     public function __construct(NullableEmbeddableService $nullableEmbeddableService)
     {
@@ -32,7 +35,8 @@ class NullableEmbeddableSubscriber implements EventSubscriber
     public function postLoad(LifecycleEventArgs $args)
     {
         $entity = $args->getObject();
-        $nullableEmbeddeds = $this->nullableEmbeddableService->getNullableEmbeddeds(get_class($entity));
+        $this->objectManager = $args->getObjectManager();
+        $nullableEmbeddeds = $this->nullableEmbeddableService->getNullableEmbeddeds($this->getRealClassName($entity));
         if ($nullableEmbeddeds === []) {
             return;
         }
@@ -41,7 +45,7 @@ class NullableEmbeddableSubscriber implements EventSubscriber
 
     private function setNullEmbeddedPropertiesToNull($entity, $properties): void
     {
-        $reflectionClass = new ReflectionClass(get_class($entity));
+        $reflectionClass = new ReflectionClass($this->getRealClassName($entity));
         foreach ($properties as $property) {
             $reflectionProperty = $reflectionClass->getProperty($property);
             $reflectionProperty->setAccessible(true);
@@ -57,7 +61,7 @@ class NullableEmbeddableSubscriber implements EventSubscriber
 
     private function isNullObject($entity): bool
     {
-        $reflectionClass = new ReflectionClass(get_class($entity));
+        $reflectionClass = new ReflectionClass($this->getRealClassName($entity));
         $isNull = true;
         foreach ($reflectionClass->getProperties() as $reflectionProperty) {
             $reflectionProperty->setAccessible(true);
@@ -74,5 +78,9 @@ class NullableEmbeddableSubscriber implements EventSubscriber
             $reflectionProperty->setAccessible(false);
         }
         return $isNull;
+    }
+
+    private function getRealClassName($entity) {
+        return $this->objectManager->getClassMetadata(get_class($entity))->getName();
     }
 }

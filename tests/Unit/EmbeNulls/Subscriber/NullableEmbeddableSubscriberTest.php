@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Unit\EmbeNulls\Subscriber;
 
 use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
+use Doctrine\Persistence\Mapping\ClassMetadata;
+use Doctrine\Persistence\ObjectManager;
 use EmbeNulls\Service\NullableEmbeddableService;
 use EmbeNulls\Subscriber\NullableEmbeddableSubscriber;
 use PHPUnit\Framework\TestCase;
@@ -53,7 +55,7 @@ class NullableEmbeddableSubscriberTest extends TestCase
 
         $lifecycleEventArgs = $this->buildEventArgument($postalCode);
 
-        $this->sut->postLoad($lifecycleEventArgs->reveal());
+        $this->sut->postLoad($lifecycleEventArgs);
         $this->assertEquals(self::DEFAULT_POSTAL_CODE, $postalCode->getValue());
     }
 
@@ -66,7 +68,7 @@ class NullableEmbeddableSubscriberTest extends TestCase
 
         $lifecycleEventArgs = $this->buildEventArgument($dog);
 
-        $this->sut->postLoad($lifecycleEventArgs->reveal());
+        $this->sut->postLoad($lifecycleEventArgs);
 
         $this->assertEquals(self::DEFAULT_DOG_NAME, $dog->getName());
         $this->assertNull($dog->getPetIdentification());
@@ -81,7 +83,7 @@ class NullableEmbeddableSubscriberTest extends TestCase
 
         $lifecycleEventArgs = $this->buildEventArgument($dog);
 
-        $this->sut->postLoad($lifecycleEventArgs->reveal());
+        $this->sut->postLoad($lifecycleEventArgs);
 
         $this->assertEquals(self::DEFAULT_DOG_NAME, $dog->getName());
         $this->assertNull($dog->getPetIdentification());
@@ -106,7 +108,7 @@ class NullableEmbeddableSubscriberTest extends TestCase
 
         $lifecycleEventArgs = $this->buildEventArgument($dog);
 
-        $this->sut->postLoad($lifecycleEventArgs->reveal());
+        $this->sut->postLoad($lifecycleEventArgs);
 
         $this->assertEquals(self::DEFAULT_DOG_NAME, $dog->getName());
 
@@ -140,11 +142,33 @@ class NullableEmbeddableSubscriberTest extends TestCase
         return $r->newInstanceWithoutConstructor();
     }
 
-    protected function buildEventArgument($entity)
+    protected function buildEventArgument($entity): LifecycleEventArgs
     {
         $lifecycleEventArgs = $this->prophesize(LifecycleEventArgs::class);
         $lifecycleEventArgs->getObject()->willReturn($entity)->shouldBeCalledOnce();
 
-        return $lifecycleEventArgs;
+        $objectManager = $this->prophesize(ObjectManager::class);
+        $this->buildMetadataClassForClass($objectManager, Address::class);
+        $this->buildMetadataClassForClass($objectManager, Dog::class);
+        $this->buildMetadataClassForClass($objectManager, Email::class);
+        $this->buildMetadataClassForClass($objectManager, Owner::class);
+        $this->buildMetadataClassForClass($objectManager, PetIdentification::class);
+        $this->buildMetadataClassForClass($objectManager, Phone::class);
+        $this->buildMetadataClassForClass($objectManager, PostalCode::class);
+
+        $lifecycleEventArgs->getObjectManager()->willReturn($objectManager->reveal());
+
+        return $lifecycleEventArgs->reveal();
+    }
+
+    /**
+     * @param ObjectManager $objectManager
+     * @param string        $class
+     */
+    private function buildMetadataClassForClass($objectManager, string $class): void
+    {
+        $metadataClass = $this->prophesize(ClassMetadata::class);
+        $metadataClass->getName()->willReturn($class);
+        $objectManager->getClassMetadata($class)->willReturn($metadataClass);
     }
 }
