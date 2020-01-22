@@ -7,6 +7,7 @@ namespace EmbeNulls\Subscriber;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\Events;
+use Doctrine\Persistence\Mapping\MappingException;
 use Doctrine\Persistence\ObjectManager;
 use EmbeNulls\Service\NullableEmbeddableService;
 use ReflectionClass;
@@ -81,6 +82,10 @@ class NullableEmbeddableSubscriber implements EventSubscriber
     }
 
     private function getRealClassName($entity) {
-        return $this->objectManager->getClassMetadata(get_class($entity))->getName();
+        try{
+            return $this->objectManager->getClassMetadata(get_class($entity))->getName();
+        }catch (MappingException $exception) {
+            return get_class($entity);
+        }
     }
 }

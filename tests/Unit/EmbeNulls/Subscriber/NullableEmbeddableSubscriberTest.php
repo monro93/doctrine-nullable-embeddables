@@ -6,6 +6,7 @@ namespace Unit\EmbeNulls\Subscriber;
 
 use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
 use Doctrine\Persistence\Mapping\ClassMetadata;
+use Doctrine\Persistence\Mapping\MappingException;
 use Doctrine\Persistence\ObjectManager;
 use EmbeNulls\Service\NullableEmbeddableService;
 use EmbeNulls\Subscriber\NullableEmbeddableSubscriber;
@@ -154,7 +155,7 @@ class NullableEmbeddableSubscriberTest extends TestCase
         $this->buildMetadataClassForClass($objectManager, Owner::class);
         $this->buildMetadataClassForClass($objectManager, PetIdentification::class);
         $this->buildMetadataClassForClass($objectManager, Phone::class);
-        $this->buildMetadataClassForClass($objectManager, PostalCode::class);
+        $this->buildMetadataClassForClassThatCrash($objectManager, PostalCode::class);
 
         $lifecycleEventArgs->getObjectManager()->willReturn($objectManager->reveal());
 
@@ -169,6 +170,17 @@ class NullableEmbeddableSubscriberTest extends TestCase
     {
         $metadataClass = $this->prophesize(ClassMetadata::class);
         $metadataClass->getName()->willReturn($class);
+        $objectManager->getClassMetadata($class)->willReturn($metadataClass);
+    }
+
+    /**
+     * @param ObjectManager $objectManager
+     * @param string        $class
+     */
+    private function buildMetadataClassForClassThatCrash($objectManager, string $class): void
+    {
+        $metadataClass = $this->prophesize(ClassMetadata::class);
+        $metadataClass->getName()->willThrow(MappingException::class);
         $objectManager->getClassMetadata($class)->willReturn($metadataClass);
     }
 }
