@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Unit\EmbeNulls\Subscriber;
 
-use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
+use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\Persistence\Mapping\ClassMetadata;
 use Doctrine\Persistence\Mapping\MappingException;
 use Doctrine\Persistence\ObjectManager;
@@ -88,6 +88,24 @@ class NullableEmbeddableSubscriberTest extends TestCase
 
         $this->assertEquals(self::DEFAULT_DOG_NAME, $dog->getName());
         $this->assertNull($dog->getPetIdentification());
+    }
+
+    public function test_a_owner_with_null_embedded_will_set_it_to_null()
+    {
+        $owner = new Owner(
+            self::DEFAULT_OWNER_FIRST_NAME,
+            self::DEFAULT_OWNER_LAST_NAME,
+            new Email(self::DEFAULT_OWNER_EMAIL),
+            $this->createNullObjectAsDoctrineDoes(Phone::class),
+            $this->createNullObjectAsDoctrineDoes(Address::class)
+        );
+
+        $lifecycleEventArgs = $this->buildEventArgument($owner);
+
+        $this->sut->postLoad($lifecycleEventArgs);
+
+        $this->assertNull($owner->getPhone());
+        $this->assertNull($owner->getAddress());
     }
 
     public function test_a_dog_with_pet_identification_with_null_object_address_will_set_it_to_null()
