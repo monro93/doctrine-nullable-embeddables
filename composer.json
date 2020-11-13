@@ -5,7 +5,7 @@
     "description": "Workarround to the issues related of using Doctrine with embedabbles relations where the relation can be null. If the object is null doctrine would instanciate it with all the properties to null, this library will fix it to set it to null.",
     "require": {
         "php": "^7.1",
-        "doctrine/common": "^2",
+        "doctrine/common": "^2 || ^3",
         "symfony/yaml": ">= 4.0",
         "symfony/finder": ">= 4.0",
         "doctrine/orm": "^2"
