@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace EmbeNulls\Subscriber;
 
 use Doctrine\Common\EventSubscriber;
-use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
+use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Mapping\MappingException;
 use Doctrine\Persistence\ObjectManager;
@@ -63,9 +63,13 @@ class NullableEmbeddableSubscriber implements EventSubscriber
     private function isNullObject($entity): bool
     {
         $reflectionClass = new ReflectionClass($this->getRealClassName($entity));
-        $isNull = true;
+        $isNull = count($reflectionClass->getProperties()) > 0;
         foreach ($reflectionClass->getProperties() as $reflectionProperty) {
             $reflectionProperty->setAccessible(true);
+            if (!$reflectionProperty->isInitialized($entity)) {
+                continue;
+            }
+
             $value = $reflectionProperty->getValue($entity);
             if (is_object($value)) {
                 if ($this->isNullObject($value)) {
@@ -76,6 +80,7 @@ class NullableEmbeddableSubscriber implements EventSubscriber
             } elseif (!is_null($value)) {
                 $isNull = false;
             }
+
             $reflectionProperty->setAccessible(false);
         }
         return $isNull;
